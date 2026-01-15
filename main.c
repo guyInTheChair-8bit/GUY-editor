@@ -1,7 +1,4 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_pixels.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 
@@ -10,6 +7,7 @@ const int SCREEN_WIDTH = 1920;
 const int SCREEN_HEIGHT = 1920;
 
 void toggle_fullscreen (SDL_Window* window, int is_fullscreen);
+void drawText(const char* text, int x, int y, TTF_Font* font, SDL_Color* color, SDL_Renderer* renderer);
 
 int main (int argc, char** argv) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -42,20 +40,6 @@ int main (int argc, char** argv) {
 
     TTF_Font* font = TTF_OpenFont("font.ttf", 24);
     SDL_Color white = {255, 255, 255, 255};
-    SDL_Surface* surfaceMsg = TTF_RenderText_Blended(font, "BITCHHHHH!!!!", white);
-    SDL_Texture* texMsg = SDL_CreateTextureFromSurface(renderer, surfaceMsg);
-    SDL_FreeSurface(surfaceMsg);
-    
-    int texW;
-    int texH;
-
-    SDL_QueryTexture(texMsg, NULL, NULL, &texW, &texH);
-    
-    SDL_Rect dstrect;
-    dstrect.x = 100;
-    dstrect.y = 100;
-    dstrect.w = texW;
-    dstrect.h = texH;
 
     SDL_Event event;
     int is_running = 1;
@@ -75,7 +59,7 @@ int main (int argc, char** argv) {
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, texMsg, NULL, &dstrect);
+        drawText("BITCHHH", 100, 100, font, &white, renderer);
         SDL_RenderPresent(renderer);
     }
 
@@ -89,4 +73,25 @@ int main (int argc, char** argv) {
 void toggle_fullscreen (SDL_Window* window, int is_fullscreen) {
     if (is_fullscreen)  SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
     else SDL_SetWindowFullscreen(window, 0);
+}
+
+void drawText(const char* text, int x, int y, TTF_Font* font, SDL_Color* color, SDL_Renderer* renderer) {
+
+    SDL_Surface* surfaceMsg = TTF_RenderText_Blended(font, text, *color);
+    SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surfaceMsg);
+    SDL_FreeSurface(surfaceMsg);
+    
+    int texW;
+    int texH;
+
+    SDL_QueryTexture(tex, NULL, NULL, &texW, &texH);
+    
+    SDL_Rect dstrect;
+    dstrect.x = x;
+    dstrect.y = y;
+    dstrect.w = texW;
+    dstrect.h = texH;
+
+    SDL_RenderCopy(renderer, tex, NULL, &dstrect);
+    SDL_DestroyTexture(tex);
 }

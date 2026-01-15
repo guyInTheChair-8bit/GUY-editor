@@ -1,10 +1,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdio.h>
+#include <string.h>
 
 const char* TITLE = "GUY-EDITOR";
 const int SCREEN_WIDTH = 1920;
 const int SCREEN_HEIGHT = 1920;
+const int ptsize = 48;
 
 void toggle_fullscreen (SDL_Window* window, int is_fullscreen);
 void drawText(const char* text, int x, int y, TTF_Font* font, SDL_Color* color, SDL_Renderer* renderer);
@@ -38,20 +40,31 @@ int main (int argc, char** argv) {
         return -1;
     }
 
-    TTF_Font* font = TTF_OpenFont("font.ttf", 24);
+    SDL_StartTextInput();
+
+    TTF_Font* font = TTF_OpenFont("font.ttf", ptsize);
     SDL_Color white = {255, 255, 255, 255};
 
     SDL_Event event;
     int is_running = 1;
     int is_fullscreen = 0;
 
+    char strBuffer[1024] = "";
+
     while (is_running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) is_running = 0;
+            if (event.type == SDL_TEXTINPUT) {
+                if (strlen(strBuffer) + strlen(event.text.text) < 1024) {
+                    strcat(strBuffer, event.text.text);
+                } 
+            }
             if (event.type == SDL_KEYDOWN) {
                 if (event.key.keysym.sym == SDLK_f) { 
-                    is_fullscreen = !is_fullscreen;
-                    toggle_fullscreen(window, is_fullscreen);
+                    if (event.key.keysym.mod & KMOD_CTRL || event.key.keysym.mod & KMOD_GUI) {
+                        is_fullscreen = !is_fullscreen;
+                        toggle_fullscreen(window, is_fullscreen);
+                    }
                 }
                 if (event.key.keysym.sym == SDLK_ESCAPE) is_running = 0;
             }
@@ -59,7 +72,7 @@ int main (int argc, char** argv) {
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        drawText("BITCHHH", 100, 100, font, &white, renderer);
+        drawText(strBuffer, 100, 100, font, &white, renderer);
         SDL_RenderPresent(renderer);
     }
 
@@ -77,7 +90,7 @@ void toggle_fullscreen (SDL_Window* window, int is_fullscreen) {
 
 void drawText(const char* text, int x, int y, TTF_Font* font, SDL_Color* color, SDL_Renderer* renderer) {
 
-    SDL_Surface* surfaceMsg = TTF_RenderText_Blended(font, text, *color);
+    SDL_Surface* surfaceMsg = TTF_RenderText_Blended_Wrapped(font, text, *color, SCREEN_WIDTH - 200);
     SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surfaceMsg);
     SDL_FreeSurface(surfaceMsg);
     

@@ -1,4 +1,8 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_pixels.h>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_surface.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 
 const char* TITLE = "GUY-EDITOR";
@@ -10,6 +14,12 @@ void toggle_fullscreen (SDL_Window* window, int is_fullscreen);
 int main (int argc, char** argv) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL init failed: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    if (TTF_Init() == -1) {
+        printf("TTF initialization error: %s\n", TTF_GetError());
+        SDL_Quit();
         return -1;
     }
 
@@ -30,6 +40,23 @@ int main (int argc, char** argv) {
         return -1;
     }
 
+    TTF_Font* font = TTF_OpenFont("font.ttf", 24);
+    SDL_Color white = {255, 255, 255, 255};
+    SDL_Surface* surfaceMsg = TTF_RenderText_Blended(font, "BITCHHHHH!!!!", white);
+    SDL_Texture* texMsg = SDL_CreateTextureFromSurface(renderer, surfaceMsg);
+    SDL_FreeSurface(surfaceMsg);
+    
+    int texW;
+    int texH;
+
+    SDL_QueryTexture(texMsg, NULL, NULL, &texW, &texH);
+    
+    SDL_Rect dstrect;
+    dstrect.x = 100;
+    dstrect.y = 100;
+    dstrect.w = texW;
+    dstrect.h = texH;
+
     SDL_Event event;
     int is_running = 1;
     int is_fullscreen = 0;
@@ -48,6 +75,7 @@ int main (int argc, char** argv) {
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, texMsg, NULL, &dstrect);
         SDL_RenderPresent(renderer);
     }
 
